@@ -1,0 +1,83 @@
+var _ = require('lodash');
+var async = require('async-chainable');
+var fs = require('fs');
+var traverse = require('traverse');
+var xml2json = require('xml2json');
+
+var revman = {};
+module.exports = revman;
+
+revman.parse = function parse(data, options, callback) {
+	// Deal with incomming arguments {{{
+	if (_.isFunction(options)) { // Called via data, callback
+		callback = options;
+		options = {};
+	} else if (!_.isFunction(callback)) {
+		throw new Error('No callback specified');
+	}
+	// }}}
+
+	var settings = _.defaults(options, {
+		path: undefined,
+		dateFields: ['modified'],
+		arrayFields: [
+			// Data fields:
+			'person', 'whatsNewEntry', 'source',
+
+			// Pseudo HTML decorators:
+			'p', 'i', 'link', 'li',
+		],
+	});
+
+	async()
+		// Read in file contents {{{
+		.then('json', function(next) {
+			var rmXML = xml2json.toJson(data, {
+				object: true,
+			});
+			next(null, rmXML);
+		})
+		// }}}
+		.then('json', function(next) {
+			next(null, traverse(this.json).map(function(v) {
+				if (_.includes(settings.arrayFields, this.key)) { // Translatevalue into array
+					if (_.isObject(v)) { // Multiple items in array
+						this.update(_.values(v));
+					} else { // Single item array
+						this.update([v]);
+					}
+				} else if (_.isObject(v)) { // Normalize keys
+					this.update(_.mapKeys(v, function(c, k) {
+						return _.camelCase(k.toLowerCase());
+					}));
+				} else if (_.includes(settings.dateFields, this.key)) { // Translate value into Date
+					this.update(new Date(v));
+				}
+			}).cochraneReview);
+		})
+		// End {{{
+		.end(function(err) {
+			callback(err, this.json);
+		});
+		// }}}
+}
+
+revman.parseFile = function parseFile(path, options, callback) {
+	// Deal with incomming arguments {{{
+	if (_.isFunction(options)) { // Called via data, callback
+		callback = options;
+		options = {};
+	} else if (!_.isFunction(callback)) {
+		throw new Error('No callback specified');
+	}
+	// }}}
+
+	async()
+		.then('contents', function(next) {
+			fs.readFile(path, 'utf-8', next);
+		})
+		.end(function(err) {
+			if (err) return callback(err);
+			revman.parse(this.contents, options, callback);
+		});
+}
