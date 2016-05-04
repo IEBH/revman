@@ -41,7 +41,7 @@ revman.parse = function parse(data, options, callback) {
 		.then('json', function(next) {
 			next(null, traverse(this.json).map(function(v) {
 				if (_.includes(settings.arrayFields, this.key)) { // Translatevalue into array
-					if (_.isObject(v)) { // Multiple items in array
+					if (_.isObject(v) && _.has(v, '0')) { // Multiple items in array
 						this.update(_.values(v));
 					} else { // Single item array
 						this.update([v]);
