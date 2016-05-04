@@ -22,10 +22,10 @@ revman.parse = function parse(data, options, callback) {
 		dateFields: ['modified'],
 		arrayFields: [
 			// Data fields:
-			'person', 'whatsNewEntry', 'source',
+			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 'appendix',
 
 			// Pseudo HTML decorators:
-			'p', 'i', 'link', 'li',
+			'p', 'i', 'b', 'link', 'ol', 'li', 'br', 'sup', 'tr', 'td', 'th',
 		],
 	});
 
