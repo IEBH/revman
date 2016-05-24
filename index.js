@@ -21,8 +21,9 @@ revman.parse = function parse(data, options, callback) {
 	var settings = _.defaults(options, {
 		pRounding: 6,
 		dateFields: ['modified'],
-		floatFields: ['ciEnd', 'ciStart', 'effectSize', 'logCiEnd', 'logCiStart', 'logEffectSize', 'se', 'var', 'weight', 'i2', 'pChi2', 'pZ', 'tau2', 'z'],
-		numberFields:  ['events1', 'events2', 'order', 'no', 'studies', 'total1', 'total2'],
+		floatFields: ['ciEnd', 'ciStart', 'effectSize', 'logCiEnd', 'logCiStart', 'logEffectSize', 'se', 'var', 'weight', 'i2', 'i2Q', 'q', 'scale', 'chi2', 'pChi2', 'pQ', 'pZ', 'tau2', 'z', 'oE'],
+		numberFields:  ['events1', 'events2', 'order', 'no', 'studies', 'total1', 'total2', 'ciStudy', 'ciTotal', 'df'],
+		booleanFields: ['estimable', 'random', 'subgroups', 'subgroupTest', 'swapEvents', 'totals'],
 		arrayFields: [
 			// Data fields:
 			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 'appendix',
@@ -61,6 +62,8 @@ revman.parse = function parse(data, options, callback) {
 					this.update(parseInt(v));
 				} else if (_.includes(settings.floatFields, this.key)) { // Translate into floats
 					this.update(parseFloat(v));
+				} else if (_.includes(settings.booleanFields, this.key)) { // Translate into floats
+					this.update(v == 'YES');
 				}
 			}).cochraneReview);
 		})

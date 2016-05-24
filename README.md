@@ -33,13 +33,14 @@ Parse raw data (data is assumed to be valid XML as a string, stream or buffer) a
 
 Options can be any of the following:
 
-| Option         | Type           | Default        | Description                                                          |
-|----------------|----------------|----------------|----------------------------------------------------------------------|
-| `pRounding`    | Number         | `6`            | Decimal place precision when rounding P values                       |
-| `arrayFields`  | Array          | *See code*     | An array of fields that should be coerced into an array              |
-| `dateFields`   | Array(Strings) | `['modified']` | An array of fields that should be translated into JavaScript dates   |
-| `numberFields` | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript numbers |
-| `floatFields`  | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript floats  |
+| Option          | Type           | Default        | Description                                                           |
+|-----------------|----------------|----------------|-----------------------------------------------------------------------|
+| `pRounding`     | Number         | `6`            | Decimal place precision when rounding P values                        |
+| `arrayFields`   | Array          | *See code*     | An array of fields that should be coerced into an array               |
+| `booleanFields` | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript booleans |
+| `dateFields`    | Array(Strings) | `['modified']` | An array of fields that should be translated into JavaScript dates    |
+| `numberFields`  | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript numbers  |
+| `floatFields`   | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript floats   |
 
 
 parseFile(path, [options], callback)
