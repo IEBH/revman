@@ -24,6 +24,29 @@ revman.parseFile('./test/data/antibiotics-for-sore-throat.rm5', function(err, re
 See the [antibiotics-for-sore-throat.json](test/data/antibiotics-for-sore-throat.json) file for the JSON output for that sample file and as a rough guide as to the valid Revman fields.
 
 
+API
+===
+
+parse(data, [options], callback)
+------------------------------
+Parse raw data (data is assumed to be valid XML as a string, stream or buffer) and return the formatted output.
+
+Options can be any of the following:
+
+| Option        | Type           | Default        | Description                                                        |
+|---------------|----------------|----------------|--------------------------------------------------------------------|
+| `dateFields`  | Array(Strings) | `['modified']` | An array of fields that should be translated into JavaScript dates |
+| `pRounding`   | Number         | `6`            | Decimal place precision when rounding P values                     |
+| `arrayFields` | Array          | *See code*     | An array of fields that should be coerced into an array            |
+
+
+parseFile(path, [options], callback)
+------------------------------------
+Convenience function to read a file from disk and return the formatted output.
+
+See the `parse()` function for details on the available options.
+
+
 Sample data credits
 ===================
 Thanks to Anneliese Spinks, Paul Glasziou, Chris Del Mar for the sample data set [antibiotics-for-sore-throat](test/data/antibiotics-for-sore-throat.rm5) which forms the supplied testing kit.
