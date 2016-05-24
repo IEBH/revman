@@ -19,8 +19,10 @@ revman.parse = function parse(data, options, callback) {
 
 	// Process settings {{{
 	var settings = _.defaults(options, {
-		dateFields: ['modified'],
 		pRounding: 6,
+		dateFields: ['modified'],
+		floatFields: ['ciEnd', 'ciStart', 'effectSize', 'logCiEnd', 'logCiStart', 'logEffectSize', 'se', 'var', 'weight', 'i2', 'pChi2', 'pZ', 'tau2', 'z'],
+		numberFields:  ['events1', 'events2', 'order', 'no', 'studies', 'total1', 'total2'],
 		arrayFields: [
 			// Data fields:
 			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 'appendix',
@@ -55,6 +57,10 @@ revman.parse = function parse(data, options, callback) {
 					}));
 				} else if (_.includes(settings.dateFields, this.key)) { // Translate value into Date
 					this.update(new Date(v));
+				} else if (_.includes(settings.numberFields, this.key)) { // Translate into numbers
+					this.update(parseInt(v));
+				} else if (_.includes(settings.floatFields, this.key)) { // Translate into floats
+					this.update(parseFloat(v));
 				}
 			}).cochraneReview);
 		})
