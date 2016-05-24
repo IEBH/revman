@@ -17,6 +17,7 @@ revman.parse = function parse(data, options, callback) {
 	}
 	// }}}
 
+	// Process settings {{{
 	var settings = _.defaults(options, {
 		path: undefined,
 		dateFields: ['modified'],
@@ -28,6 +29,7 @@ revman.parse = function parse(data, options, callback) {
 			'p', 'i', 'b', 'link', 'ol', 'li', 'br', 'sup', 'tr', 'td', 'th',
 		],
 	});
+	// }}}
 
 	async()
 		// Read in file contents {{{
@@ -38,6 +40,7 @@ revman.parse = function parse(data, options, callback) {
 			next(null, rmXML);
 		})
 		// }}}
+		// Parse raw input into JS standard JSON {{{
 		.then('json', function(next) {
 			next(null, traverse(this.json).map(function(v) {
 				if (_.includes(settings.arrayFields, this.key)) { // Translatevalue into array
@@ -55,6 +58,23 @@ revman.parse = function parse(data, options, callback) {
 				}
 			}).cochraneReview);
 		})
+		// }}}
+		.parallel([
+			// calculate study.participants {{{
+			function(next) {
+				this.json.analysesAndData.comparison.forEach(function(comparison) {
+					comparison.participants = 0;
+					comparison.dichOutcome.forEach(function(outcome) {
+						outcome.total1 = parseInt(outcome.total1);
+						outcome.total2 = parseInt(outcome.total2);
+						outcome.participants = outcome.total1 + outcome.total2;
+						comparison.participants += outcome.participants;
+					});
+				});
+				next();
+			},
+			// }}}
+		])
 		// End {{{
 		.end(function(err) {
 			callback(err, this.json);

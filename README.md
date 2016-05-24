@@ -9,6 +9,7 @@ The following operations are applied to the raw source data:
 * Initial `cochraneReview` key removed and main body returned as object
 * Date fields automatically translated into Date objects
 * Various fields automatically translated into arrays
+* The `participants` field will automatically be calculated for each comparison and each individual `dichOutcome`
 
 
 ```javascript

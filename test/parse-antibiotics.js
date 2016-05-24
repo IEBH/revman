@@ -73,4 +73,19 @@ describe('Revman - parse file: antibiotics-for-sore-throat.rm5', function() {
 			}
 		});
 	});
+
+	it('should calculate analysisAndData.comparison[].participants', function() {
+		expect(data.analysesAndData.comparison[0].participants).to.equal(20421);
+		expect(data.analysesAndData.comparison[0].dichOutcome[0].participants).to.equal(3621);
+
+		expect(data.analysesAndData.comparison[1].participants).to.equal(4102);
+		expect(data.analysesAndData.comparison[1].dichOutcome[0].participants).to.equal(1334);
+		expect(data.analysesAndData.comparison[1].dichOutcome[3].participants).to.equal(777);
+
+		expect(data.analysesAndData.comparison[2].participants).to.equal(1822);
+		expect(data.analysesAndData.comparison[2].dichOutcome[0].participants).to.equal(911);
+
+		expect(data.analysesAndData.comparison[3].participants).to.equal(45864);
+		expect(data.analysesAndData.comparison[3].dichOutcome[0].participants).to.equal(10101);
+	});
 });

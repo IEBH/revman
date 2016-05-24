@@ -1,6 +1,6 @@
 {
   "name": "revman",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simple module that reads a RevMan XML file and makes it suitable for use in Node",
   "main": "index.js",
   "directories": {
