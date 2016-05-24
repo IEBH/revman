@@ -19,8 +19,8 @@ revman.parse = function parse(data, options, callback) {
 
 	// Process settings {{{
 	var settings = _.defaults(options, {
-		path: undefined,
 		dateFields: ['modified'],
+		pRounding: 6,
 		arrayFields: [
 			// Data fields:
 			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 'appendix',
@@ -69,6 +69,24 @@ revman.parse = function parse(data, options, callback) {
 						outcome.total2 = parseInt(outcome.total2);
 						outcome.participants = outcome.total1 + outcome.total2;
 						comparison.participants += outcome.participants;
+					});
+				});
+				next();
+			},
+			// }}}
+			// calculate study.pText {{{
+			function(next) {
+				this.json.analysesAndData.comparison.forEach(function(comparison) {
+					comparison.dichOutcome.forEach(function(outcome) {
+						outcome.pZ = parseFloat(outcome.pZ);
+						var p = outcome.p = _.round(outcome.pZ, settings.pRounding);
+						outcome.pText = 
+							p <= 0.00001 ? 'P < 0.00001' :
+							p <= 0.0001 ? 'P < 0.0001' :
+							p <= 0.001 ? 'P < 0.001' :
+							p <= 0.01 ? 'P < 0.01' :
+							p <= 0.05 ? 'P < 0.05' :
+							'P = ' + p;
 					});
 				});
 				next();
