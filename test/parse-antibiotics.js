@@ -124,4 +124,12 @@ describe('Revman - parse file: antibiotics-for-sore-throat.rm5', function() {
 		expect(data.analysesAndData.comparison[1].dichOutcome[1].p).to.equal(0.121699);
 		expect(data.analysesAndData.comparison[1].dichOutcome[1].pText).to.equal('P = 0.121699');
 	});
+
+	it('should calculate analysisAndData.comparison[].dichOutcome[].dichSubgroup[].participants', function() {
+		expect(data.analysesAndData.comparison[0].dichOutcome[1].dichSubgroup[0].participants).to.equal(1532 + 1130);
+		expect(data.analysesAndData.comparison[0].dichOutcome[1].dichSubgroup[1].participants).to.equal(534 + 425);
+
+		expect(data.analysesAndData.comparison[0].dichOutcome[3].dichSubgroup[0].participants).to.equal(1073 + 766);
+		expect(data.analysesAndData.comparison[0].dichOutcome[3].dichSubgroup[1].participants).to.equal(458 + 278);
+	});
 });

@@ -78,6 +78,12 @@ revman.parse = function parse(data, options, callback) {
 						outcome.total2 = parseInt(outcome.total2);
 						outcome.participants = outcome.total1 + outcome.total2;
 						comparison.participants += outcome.participants;
+
+						if (outcome.dichSubgroup) {
+							outcome.dichSubgroup.forEach(function(subgroup) {
+								subgroup.participants = subgroup.total1 + subgroup.total2;
+							});
+						}
 					});
 				});
 				next();
