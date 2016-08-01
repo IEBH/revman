@@ -31,6 +31,20 @@ revman.parse = function parse(data, options, callback) {
 			// Pseudo HTML decorators:
 			'p', 'i', 'b', 'link', 'ol', 'li', 'br', 'sup', 'tr', 'td', 'th',
 		],
+		effectMeasureLookup: {
+			'RR': 'Risk Ratio',
+			'ARR': 'Absolute Risk Reduction',
+			'CGR': 'Control Group Risk',
+			'CCT': 'Controlled Clinical Trial',
+			'IV': 'Inverse Variance',
+			'M-H': 'Mantel-Haenszel',
+			'MD': 'Mean Difference',
+			'OR': 'Odds Ratio',
+			'RD': 'Risk Difference',
+			'SD': 'Standard Deviation',
+			'SE': 'Standard Error',
+			'SMD': 'Standardized Mean Difference',
+		},
 	});
 	// }}}
 
@@ -69,7 +83,7 @@ revman.parse = function parse(data, options, callback) {
 		})
 		// }}}
 		.parallel([
-			// calculate study.participants {{{
+			// Calculate study.participants {{{
 			function(next) {
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
 					comparison.participants = 0;
@@ -89,7 +103,7 @@ revman.parse = function parse(data, options, callback) {
 				next();
 			},
 			// }}}
-			// calculate study.pText {{{
+			// Calculate study.pText {{{
 			function(next) {
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
 					comparison.dichOutcome.forEach(function(outcome) {
@@ -102,6 +116,16 @@ revman.parse = function parse(data, options, callback) {
 							p <= 0.01 ? 'P < 0.01' :
 							p <= 0.05 ? 'P < 0.05' :
 							'P = ' + p;
+					});
+				});
+				next();
+			},
+			// }}}
+			// Calculate study.effectMeasureText {{{
+			function(next) {
+				this.json.analysesAndData.comparison.forEach(function(comparison) {
+					comparison.dichOutcome.forEach(function(outcome) {
+						if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure];
 					});
 				});
 				next();
