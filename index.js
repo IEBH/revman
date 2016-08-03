@@ -26,10 +26,11 @@ revman.parse = function parse(data, options, callback) {
 		booleanFields: ['estimable', 'random', 'subgroups', 'subgroupTest', 'swapEvents', 'totals'],
 		arrayFields: [
 			// Data fields:
-			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 'appendix',
+			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'contData', 'contOutcome', 'contSubgroup', 'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 'ivData', 'appendix',
 
 			// Pseudo HTML decorators:
-			'p', 'i', 'b', 'link', 'ol', 'li', 'br', 'sup', 'tr', 'td', 'th',
+			'p', 'a', 'i', 'b', 'link', 'ol', 'li', 'br', 'sup', 'tr', 'td', 'th',
+			'additionalTable', 'extension', 'flowchartbox',
 		],
 		effectMeasureLookup: {
 			'RR': 'Risk Ratio',
