@@ -74,68 +74,93 @@ describe('Revman - parse file: antibiotics-for-sore-throat.rm5', function() {
 		});
 	});
 
+	it('should have calculated the outcome structure', function() {
+		data.analysesAndData.comparison.forEach(function(comparison) {
+			expect(comparison).to.have.property('outcome');
+			expect(comparison.outcome).to.be.an.array;
+			expect(comparison.outcome).to.have.length.above(0);
+			comparison.outcome.forEach(function(outcome) {
+				if (outcome.subgroup) {
+					expect(outcome.subgroup).to.be.an.array;
+					expect(outcome.subgroup).to.have.length.above(0);
+					outcome.subgroup.forEach(function(subgroup) {
+						expect(subgroup).to.have.property('study');
+						expect(subgroup.study).to.be.an.array;
+						expect(subgroup.study).to.have.length.above(0);
+					});
+				} else {
+					expect(outcome.study).to.be.an.array;
+					expect(outcome.study).to.have.length.above(0);
+				}
+			});
+		});
+	});
+
 	it('should have converted scalars into booleans', function() {
-		[
-			'analysesAndData.comparison.0.dichOutcome.0.random',
-			'analysesAndData.comparison.0.dichOutcome.0.subgroups',
-			'analysesAndData.comparison.0.dichOutcome.0.subgroupsTest',
-			'analysesAndData.comparison.0.dichOutcome.0.swapEvents',
-		].forEach(function(path) {
-			var val = _.get(data, path);
-			expect(val).to.be.a.boolean;
+		data.analysesAndData.comparison.forEach(function(comparison) {
+			comparison.outcome.forEach(function(outcome) {
+				['random', 'subgroups', 'subgroupTest', 'swapEvents'].forEach(function(key) {
+					expect(outcome).to.have.property(key);
+					expect(outcome[key]).to.be.a.boolean;
+				});
+			});
 		});
 	});
 
 	it('should have converted scalars into numbers', function() {
-		[
-			'analysesAndData.comparison.0.dichOutcome.0.chi2',
-			'analysesAndData.comparison.0.dichOutcome.0.ciEnd',
-			'analysesAndData.comparison.0.dichOutcome.0.tau2',
-			'analysesAndData.comparison.0.dichOutcome.0.dichData.0.se',
-		].forEach(function(path) {
-			var val = _.get(data, path);
-			expect(val).to.be.ok;
-			expect(val).to.be.a.number;
+		data.analysesAndData.comparison.forEach(function(comparison) {
+			comparison.outcome.forEach(function(outcome) {
+				['chi2', 'ciEnd', 'tau2'].forEach(function(key) {
+					expect(outcome).to.have.property(key);
+					expect(outcome[key]).to.be.a.number;
+					if (outcome.study) {
+						outcome.study.forEach(function(study) {
+							expect(study).to.have.property('se');
+							expect(study.se).to.be.a.number;
+						});
+					}
+				});
+			});
 		});
 	});
 
 	it('should calculate analysisAndData.comparison[].participants', function() {
 		expect(data.analysesAndData.comparison[0].participants).to.equal(20421);
-		expect(data.analysesAndData.comparison[0].dichOutcome[0].participants).to.equal(3621);
+		expect(data.analysesAndData.comparison[0].outcome[0].participants).to.equal(3621);
 
 		expect(data.analysesAndData.comparison[1].participants).to.equal(4102);
-		expect(data.analysesAndData.comparison[1].dichOutcome[0].participants).to.equal(1334);
-		expect(data.analysesAndData.comparison[1].dichOutcome[3].participants).to.equal(777);
+		expect(data.analysesAndData.comparison[1].outcome[0].participants).to.equal(1334);
+		expect(data.analysesAndData.comparison[1].outcome[3].participants).to.equal(777);
 
 		expect(data.analysesAndData.comparison[2].participants).to.equal(1822);
-		expect(data.analysesAndData.comparison[2].dichOutcome[0].participants).to.equal(911);
+		expect(data.analysesAndData.comparison[2].outcome[0].participants).to.equal(911);
 
 		expect(data.analysesAndData.comparison[3].participants).to.equal(45864);
-		expect(data.analysesAndData.comparison[3].dichOutcome[0].participants).to.equal(10101);
+		expect(data.analysesAndData.comparison[3].outcome[0].participants).to.equal(10101);
 	});
 
 	it('should calculate analysisAndData.comparison[].p + pText', function() {
-		expect(data.analysesAndData.comparison[0].dichOutcome[0].p).to.equal(0);
-		expect(data.analysesAndData.comparison[0].dichOutcome[0].pText).to.equal('P < 0.00001');
+		expect(data.analysesAndData.comparison[0].outcome[0].p).to.equal(0);
+		expect(data.analysesAndData.comparison[0].outcome[0].pText).to.equal('P < 0.00001');
 
-		expect(data.analysesAndData.comparison[0].dichOutcome[4].p).to.equal(0.001406);
-		expect(data.analysesAndData.comparison[0].dichOutcome[4].pText).to.equal('P < 0.01');
+		expect(data.analysesAndData.comparison[0].outcome[4].p).to.equal(0.001406);
+		expect(data.analysesAndData.comparison[0].outcome[4].pText).to.equal('P < 0.01');
 
-		expect(data.analysesAndData.comparison[1].dichOutcome[1].p).to.equal(0.121699);
-		expect(data.analysesAndData.comparison[1].dichOutcome[1].pText).to.equal('P = 0.121699');
+		expect(data.analysesAndData.comparison[1].outcome[1].p).to.equal(0.121699);
+		expect(data.analysesAndData.comparison[1].outcome[1].pText).to.equal('P = 0.121699');
 	});
 
-	it('should calculate analysisAndData.comparison[].dichOutcome[].dichSubgroup[].participants', function() {
-		expect(data.analysesAndData.comparison[0].dichOutcome[1].dichSubgroup[0].participants).to.equal(1532 + 1130);
-		expect(data.analysesAndData.comparison[0].dichOutcome[1].dichSubgroup[1].participants).to.equal(534 + 425);
+	it('should calculate analysisAndData.comparison[].outcome[].subgroup[].participants', function() {
+		expect(data.analysesAndData.comparison[0].outcome[1].subgroup[0].participants).to.equal(1532 + 1130);
+		expect(data.analysesAndData.comparison[0].outcome[1].subgroup[1].participants).to.equal(534 + 425);
 
-		expect(data.analysesAndData.comparison[0].dichOutcome[3].dichSubgroup[0].participants).to.equal(1073 + 766);
-		expect(data.analysesAndData.comparison[0].dichOutcome[3].dichSubgroup[1].participants).to.equal(458 + 278);
+		expect(data.analysesAndData.comparison[0].outcome[3].subgroup[0].participants).to.equal(1073 + 766);
+		expect(data.analysesAndData.comparison[0].outcome[3].subgroup[1].participants).to.equal(458 + 278);
 	});
 
-	it('should calculate analysisAndData.comparison[].dichOutcome[].effectMeasureText', function() {
+	it('should calculate analysisAndData.comparison[].outcome[].effectMeasureText', function() {
 		data.analysesAndData.comparison.forEach(function(comparison) {
-			comparison.dichOutcome.forEach(function(outcome) {
+			comparison.outcome.forEach(function(outcome) {
 				expect(outcome).to.have.property('effectMeasure', 'RR');
 				expect(outcome).to.have.property('effectMeasureText', 'Risk Ratio');
 			});

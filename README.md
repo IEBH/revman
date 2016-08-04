@@ -11,6 +11,9 @@ The following operations are applied to the raw source data:
 * Various fields automatically translated into arrays
 * The `participants` field will automatically be calculated for each comparison each `dichOutcome` and each `dichSubgroup`
 * The `p` field is calculated and rounded using the `pRounding` precision. `pText` is also calculated (e.g. `P < 0.001` etc.)
+* The `effectMeasureText` value is set to the long-hand version of the shorter `effectMeasure` value (e.g. `effectMeasure=RR` sets `effectMeasureText=Rick Ratio`)
+* The `outcome` collection is calculated for each comparison providing easier access to the outcomes and studies without having to look at specific types of study key
+* The `outcomeType` key is set for each outcome to label what type of outcome it is
 
 
 ```javascript
@@ -21,7 +24,24 @@ revman.parseFile('./test/data/antibiotics-for-sore-throat.rm5', function(err, re
 });
 ```
 
-See the [antibiotics-for-sore-throat.json](test/data/antibiotics-for-sore-throat.json) file for the JSON output for that sample file and as a rough guide as to the valid Revman fields.
+See the [antibiotics-for-sore-throat.json](test/data/antibiotics-for-sore-throat.json) file for the JSON output for that sample file and as a rough guide as to the valid RevMan fields.
+
+
+Outcome traversal
+-----------------
+In order to simplify traversal of a RevMan file an additional meta object, `outcome`, is added to each comparison. The structure of this object is usually of the form: `comparisons[].outcome[].subgroup[].study[]`.
+
+However, since comparisons sometimes do not contain subgroups that portion of the path is optional.
+
+The following trees are example structures using the `outcome` structure:
+
+```
+// The first study within an outcome that has subgroups
+analysesAndData.comparison[0].outcome[0].subgroup[0].study[0]
+
+// The first study within an outcome with no subgroups
+analysesAndData.comparison[0].outcome[0].study[0]
+```
 
 
 API
@@ -33,14 +53,16 @@ Parse raw data (data is assumed to be valid XML as a string, stream or buffer) a
 
 Options can be any of the following:
 
-| Option          | Type           | Default        | Description                                                           |
-|-----------------|----------------|----------------|-----------------------------------------------------------------------|
-| `pRounding`     | Number         | `6`            | Decimal place precision when rounding P values                        |
-| `arrayFields`   | Array          | *See code*     | An array of fields that should be coerced into an array               |
-| `booleanFields` | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript booleans |
-| `dateFields`    | Array(Strings) | `['modified']` | An array of fields that should be translated into JavaScript dates    |
-| `numberFields`  | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript numbers  |
-| `floatFields`   | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript floats   |
+| Option                | Type           | Default        | Description                                                                                           |
+|-----------------------|----------------|----------------|-------------------------------------------------------------------------------------------------------|
+| `pRounding`           | Number         | `6`            | Decimal place precision when rounding P values                                                        |
+| `arrayFields`         | Array          | *See code*     | An array of fields that should be coerced into an array                                               |
+| `booleanFields`       | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript booleans                                 |
+| `dateFields`          | Array(Strings) | `['modified']` | An array of fields that should be translated into JavaScript dates                                    |
+| `numberFields`        | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript numbers                                  |
+| `floatFields`         | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript floats                                   |
+| `effectMeasureLookup` | Object         | *See code*     | Text value of shorthand effect measures (e.g. `effectMeasure=RR` sets `effectMeasureText=Rick Ratio`) |
+| `outcomeKeys`         | Array(Objects) | *See code*     | Keys to use when creating the `outcome` structure. Set this to falsy to disable                       |
 
 
 parseFile(path, [options], callback)

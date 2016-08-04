@@ -46,6 +46,10 @@ revman.parse = function parse(data, options, callback) {
 			'SE': 'Standard Error',
 			'SMD': 'Standardized Mean Difference',
 		},
+		outcomeKeys: [
+			{type: 'dich', outcome: 'dichOutcome', study: 'dichData', subgroup: 'dichSubgroup'},
+			{type: 'cont', outcome: 'contOutcome', study: 'contData', subgroup: 'contSubgroup'},
+		],
 	});
 	// }}}
 
@@ -84,6 +88,33 @@ revman.parse = function parse(data, options, callback) {
 		})
 		// }}}
 		.parallel([
+			// Calculate comparison.outcome {{{
+			function(next) {
+				if (!settings.outcomeKeys) return next();
+				this.json.analysesAndData.comparison.forEach(function(comparison, comparisonIndex) {
+					_.some(settings.outcomeKeys, function(outcomeMeta) {
+						if (_.has(comparison, outcomeMeta.outcome)) {
+							comparison.outcomeType = outcomeMeta.type;
+							comparison.outcome = comparison[outcomeMeta.outcome];
+							comparison.outcome.forEach(function(outcome, outcomeIndex) {
+								if (_.has(outcome, outcomeMeta.subgroup)) { // This outcome has subgroups
+									outcome.subgroup = outcome[outcomeMeta.subgroup];
+									outcome.subgroup.forEach(function(subgroup, subgroupIndex) {
+										subgroup.study = subgroup[outcomeMeta.study];
+									});
+								} else if (_.has(outcome, outcomeMeta.study)) { // This outcome has no subgroups and just contains studies
+									outcome.study = outcome[outcomeMeta.study];
+								} else {
+									throw new Error('Cannot determine outcome at: ' + ['comparison', comparisonIndex, 'outcome', outcomeIndex].join('.'));
+								}
+							});
+							return true;
+						}
+					});
+				});
+				next();
+			},
+			// }}}
 			// Calculate study.participants {{{
 			function(next) {
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
