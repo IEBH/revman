@@ -56,10 +56,14 @@ revman.parse = function parse(data, options, callback) {
 	async()
 		// Read in file contents {{{
 		.then('json', function(next) {
-			var rmXML = xml2json.toJson(data, {
-				object: true,
-			});
-			next(null, rmXML);
+			try {
+				var rmXML = xml2json.toJson(data, {
+					object: true,
+				});
+				next(null, rmXML);
+			} catch (e) {
+				next(e);
+			}
 		})
 		// }}}
 		// Parse raw input into JS standard JSON {{{
