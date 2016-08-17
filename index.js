@@ -105,73 +105,91 @@ revman.parse = function parse(data, options, callback) {
 			// Calculate comparison.outcome {{{
 			function(next) {
 				if (!settings.outcomeKeys) return next();
-				this.json.analysesAndData.comparison.forEach(function(comparison, comparisonIndex) {
-					comparison.outcome = [];
-					settings.outcomeKeys.forEach(function(outcomeMeta) {
-						if (_.has(comparison, outcomeMeta.outcome)) {
-							comparison[outcomeMeta.outcome].forEach(function(outcome) {
-								outcome.outcomeType = outcomeMeta.type;
+				if (_.isArray(this.json.analysesAndData.comparison)) {
+					this.json.analysesAndData.comparison.forEach(function(comparison, comparisonIndex) {
+						comparison.outcome = [];
+						settings.outcomeKeys.forEach(function(outcomeMeta) {
+							if (_.has(comparison, outcomeMeta.outcome)) {
+								if (_.isArray(comparison[outcomeMeta.outcome])) {
+									comparison[outcomeMeta.outcome].forEach(function(outcome, outcomeIndex) {
+										outcome.outcomeType = outcomeMeta.type;
 
-								if (_.has(outcome, outcomeMeta.subgroup)) { // This outcome has subgroups
-									outcome.subgroup = outcome[outcomeMeta.subgroup];
-									outcome.subgroup.forEach(function(subgroup, subgroupIndex) {
-										subgroup.study = subgroup[outcomeMeta.study];
+										if (_.has(outcome, outcomeMeta.subgroup)) { // This outcome has subgroups
+											if (_.isArray(outcome[outcomeMeta.subgroup])) {
+												outcome.subgroup = outcome[outcomeMeta.subgroup];
+												outcome.subgroup.forEach(function(subgroup, subgroupIndex) {
+													subgroup.study = subgroup[outcomeMeta.study];
+												});
+											} else {
+												warnings.push('Expected structure at "comparison[' + comparisonIndex + '].' + outcomeMeta.outcome + '[' + outcomeIndex + '].subgroup" to be an array but got ' + (typeof outcome[outcomeMeta.subgroup]));
+												console.log(outcome[outcomeMeta.subgroup]);
+											}
+										} else if (_.has(outcome, outcomeMeta.study)) { // This outcome has no subgroups and just contains studies
+											if (_.isArray(outcome[outcomeMeta.study])) {
+												outcome.study = outcome[outcomeMeta.study];
+											} else {
+												warnings.push('Expected structure at "comparison[' + comparisonIndex + '].' + outcomeMeta.study + '" to be an array but got ' + (typeof outcome[outcomeMeta.study]));
+											}
+										} else {
+											warnings.push('Outcome at "comparison[' + comparisonIndex + '].outcome[' + (outcome.no-1) + ']" contains no subgroups or studies');
+										}
+
+										comparison.outcome.push(outcome);
 									});
-								} else if (_.has(outcome, outcomeMeta.study)) { // This outcome has no subgroups and just contains studies
-									outcome.study = outcome[outcomeMeta.study];
 								} else {
-									warnings.push('Outcome at "comparison[' + comparisonIndex + '].outcome[' + (outcome.no-1) + ']" contains no subgroups or studies');
+									warnings.push('Expected structure at "comparison[' + comparisonIndex + '].' + outcomeMeta.outcome + '" to be an array but got ' + (typeof comparison[outcomeMeta.outcome]));
 								}
+							}
+						});
 
-								comparison.outcome.push(outcome);
+						// Resort the comparison outcomes so they are in the right order {{{
+						comparison.outcome = _.sortBy(comparison.outcome, 'no');
+						// }}}
+
+						// Output warnings for any unknown `*Outcome` keys {{{
+						if (settings.debugOutcomes) {
+						_.keys(comparison)
+							.filter(function(key) {
+								// Ends with 'Outcome'...
+								return (/Outcome$/.test(key));
+							})
+							.filter(function(key) {
+								// AND is not already recognised
+								return !_.includes(_.map(settings.outcomeKeys, 'outcome'), key);
+							})
+							.forEach(function(key) {
+								warnings.push('Unrecognised Outcome key "' + key + '"');
 							});
 						}
+						// }}}
+
+						// Remove empty otucomes if (settings.removeEmptyOutcomes) {{{
+						if (settings.removeEmptyOutcomes) {
+							comparison.outcome = comparison.outcome.filter(function(outcome) {
+								return (outcome.subgroup || outcome.study);
+							});
+						}
+						// }}}
 					});
-
-					// Resort the comparison outcomes so they are in the right order {{{
-					comparison.outcome = _.sortBy(comparison.outcome, 'no');
-					// }}}
-
-					// Output warnings for any unknown `*Outcome` keys {{{
-					if (settings.debugOutcomes) {
-					_.keys(comparison)
-						.filter(function(key) {
-							// Ends with 'Outcome'...
-							return (/Outcome$/.test(key));
-						})
-						.filter(function(key) {
-							// AND is not already recognised
-							return !_.includes(_.map(settings.outcomeKeys, 'outcome'), key);
-						})
-						.forEach(function(key) {
-							warnings.push('Unrecognised Outcome key "' + key + '"');
-						});
-					}
-					// }}}
-
-					// Remove empty otucomes if (settings.removeEmptyOutcomes) {{{
-					if (settings.removeEmptyOutcomes) {
-						comparison.outcome = comparison.outcome.filter(function(outcome) {
-							return (outcome.subgroup || outcome.study);
-						});
-					}
-					// }}}
-				});
+				} else {
+					warnings.push('Expected structure at "comparison" to be an array but got ' + (typeof this.json.analysesAndData.comparison));
+				}
 				next();
 			},
 			// }}}
 			// Calculate study.participants {{{
 			function(next) {
+				if (!_.isArray(this.json.analysesAndData.comparison)) return next();
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
 					comparison.participants = 0;
-					comparison.dichOutcome.forEach(function(outcome) {
+					comparison.outcome.forEach(function(outcome) {
 						outcome.total1 = parseInt(outcome.total1);
 						outcome.total2 = parseInt(outcome.total2);
 						outcome.participants = outcome.total1 + outcome.total2;
 						comparison.participants += outcome.participants;
 
-						if (outcome.dichSubgroup) {
-							outcome.dichSubgroup.forEach(function(subgroup) {
+						if (outcome.subgroup) {
+							outcome.subgroup.forEach(function(subgroup) {
 								subgroup.participants = subgroup.total1 + subgroup.total2;
 							});
 						}
@@ -182,8 +200,9 @@ revman.parse = function parse(data, options, callback) {
 			// }}}
 			// Calculate study.pText {{{
 			function(next) {
+				if (!_.isArray(this.json.analysesAndData.comparison)) return next();
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
-					comparison.dichOutcome.forEach(function(outcome) {
+					comparison.outcome.forEach(function(outcome) {
 						outcome.pZ = parseFloat(outcome.pZ);
 						var p = outcome.p = _.round(outcome.pZ, settings.pRounding);
 						outcome.pText = 
@@ -200,8 +219,9 @@ revman.parse = function parse(data, options, callback) {
 			// }}}
 			// Calculate study.effectMeasureText {{{
 			function(next) {
+				if (!_.isArray(this.json.analysesAndData.comparison)) return next();
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
-					comparison.dichOutcome.forEach(function(outcome) {
+					comparison.outcome.forEach(function(outcome) {
 						if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure];
 					});
 				});
