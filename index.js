@@ -27,8 +27,13 @@ revman.parse = function parse(data, options, callback) {
 		numberFields:  ['events1', 'events2', 'order', 'no', 'studies', 'total1', 'total2', 'ciStudy', 'ciTotal', 'df'],
 		booleanFields: ['estimable', 'random', 'subgroups', 'subgroupTest', 'swapEvents', 'totals'],
 		arrayFields: [
+			// Outcome fields:
+			'contOutcome', 'contData', 'contSubgroup',
+			'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 
+			'ivOutcome', 'ivData', 'ivSubgroup',
+
 			// Data fields:
-			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'contData', 'contOutcome', 'contSubgroup', 'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 'ivData', 'appendix',
+			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'appendix',
 
 			// Pseudo HTML decorators:
 			'p', 'a', 'i', 'b', 'link', 'ol', 'li', 'br', 'sup', 'tr', 'td', 'th',
@@ -51,6 +56,7 @@ revman.parse = function parse(data, options, callback) {
 		outcomeKeys: [
 			{type: 'dich', outcome: 'dichOutcome', study: 'dichData', subgroup: 'dichSubgroup'},
 			{type: 'cont', outcome: 'contOutcome', study: 'contData', subgroup: 'contSubgroup'},
+			{type: 'iv', outcome: 'ivOutcome', study: 'ivData', subgroup: 'ivSubgroup'},
 		],
 		removeEmptyOutcomes: true,
 		debugOutcomes: false,
