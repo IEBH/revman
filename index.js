@@ -99,11 +99,12 @@ revman.parse = function parse(data, options, callback) {
 			function(next) {
 				if (!settings.outcomeKeys) return next();
 				this.json.analysesAndData.comparison.forEach(function(comparison, comparisonIndex) {
-					_.some(settings.outcomeKeys, function(outcomeMeta) {
+					comparison.outcome = [];
+					settings.outcomeKeys.forEach(function(outcomeMeta) {
 						if (_.has(comparison, outcomeMeta.outcome)) {
-							comparison.outcomeType = outcomeMeta.type;
-							comparison.outcome = comparison[outcomeMeta.outcome];
-							comparison.outcome.forEach(function(outcome, outcomeIndex) {
+							comparison[outcomeMeta.outcome].forEach(function(outcome) {
+								outcome.outcomeType = outcomeMeta.type;
+
 								if (_.has(outcome, outcomeMeta.subgroup)) { // This outcome has subgroups
 									outcome.subgroup = outcome[outcomeMeta.subgroup];
 									outcome.subgroup.forEach(function(subgroup, subgroupIndex) {
@@ -112,10 +113,11 @@ revman.parse = function parse(data, options, callback) {
 								} else if (_.has(outcome, outcomeMeta.study)) { // This outcome has no subgroups and just contains studies
 									outcome.study = outcome[outcomeMeta.study];
 								} else {
-									warnings.push('Outcome at "comparison[' + comparisonIndex + '].outcome[' + outcomeIndex + ']" contains no subgroups or studies');
+									warnings.push('Outcome at "comparison[' + comparisonIndex + '].outcome[' + (outcome.no-1) + ']" contains no subgroups or studies');
 								}
+
+								comparison.outcome.push(outcome);
 							});
-							return true;
 						}
 					});
 
