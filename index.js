@@ -31,6 +31,7 @@ revman.parse = function parse(data, options, callback) {
 			'contOutcome', 'contData', 'contSubgroup',
 			'dichOutcome', 'dichData', 'dichSubgroup', 'dichOutcome', 
 			'ivOutcome', 'ivData', 'ivSubgroup',
+			'otherOutcome', 'otherDta', 'otherSubgroup',
 
 			// Data fields:
 			'person', 'whatsNewEntry', 'source', 'qualityItem', 'qualityItemDataEntry', 'comparison', 'feedbackItem', 'figure', 'subsection', 'study', 'reference', 'includedChar', 'excludedChar', 'appendix',
@@ -57,6 +58,7 @@ revman.parse = function parse(data, options, callback) {
 			{type: 'dich', outcome: 'dichOutcome', study: 'dichData', subgroup: 'dichSubgroup'},
 			{type: 'cont', outcome: 'contOutcome', study: 'contData', subgroup: 'contSubgroup'},
 			{type: 'iv', outcome: 'ivOutcome', study: 'ivData', subgroup: 'ivSubgroup'},
+			{type: 'other', outcome: 'otherOutcome', study: 'otherData', subgroup: 'otherSubgroup'},
 		],
 		removeEmptyOutcomes: true,
 		debugOutcomes: false,
