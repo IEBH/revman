@@ -19,7 +19,7 @@ The following operations are applied to the raw source data:
 ```javascript
 var revman = require('revman');
 
-revman.parseFile('./test/data/antibiotics-for-sore-throat.rm5', function(err, res) {
+revman.parseFile('./test/data/antibiotics-for-sore-throat.rm5', function(err, res, warnings) {
 	// Data should now be a JSON tree object
 });
 ```
@@ -51,6 +51,8 @@ parse(data, [options], callback)
 ------------------------------
 Parse raw data (data is assumed to be valid XML as a string, stream or buffer) and return the formatted output.
 
+The callback will be called with the pattern `(err, parsedResult, warnings)`. Warnings will be an array of any non-fatal errors encounted when parsing the files (empty subGroups, missing studies etc.)
+
 Options can be any of the following:
 
 | Option                | Type           | Default        | Description                                                                                           |
@@ -63,6 +65,7 @@ Options can be any of the following:
 | `floatFields`         | Array(Strings) | *See code*     | An array of fields that should be translated into JavaScript floats                                   |
 | `effectMeasureLookup` | Object         | *See code*     | Text value of shorthand effect measures (e.g. `effectMeasure=RR` sets `effectMeasureText=Rick Ratio`) |
 | `outcomeKeys`         | Array(Objects) | *See code*     | Keys to use when creating the `outcome` structure. Set this to falsy to disable                       |
+| `removeEmptyOutcomes` | Boolean        | `true`         | Remove any invalid looking outcomes with no studies or subgroup child nodes                           |
 
 
 parseFile(path, [options], callback)

@@ -8,6 +8,8 @@ var revman = {};
 module.exports = revman;
 
 revman.parse = function parse(data, options, callback) {
+	var warnings = [];
+
 	// Deal with incomming arguments {{{
 	if (_.isFunction(options)) { // Called via data, callback
 		callback = options;
@@ -50,6 +52,7 @@ revman.parse = function parse(data, options, callback) {
 			{type: 'dich', outcome: 'dichOutcome', study: 'dichData', subgroup: 'dichSubgroup'},
 			{type: 'cont', outcome: 'contOutcome', study: 'contData', subgroup: 'contSubgroup'},
 		],
+		removeEmptyOutcomes: true,
 	});
 	// }}}
 
@@ -109,12 +112,20 @@ revman.parse = function parse(data, options, callback) {
 								} else if (_.has(outcome, outcomeMeta.study)) { // This outcome has no subgroups and just contains studies
 									outcome.study = outcome[outcomeMeta.study];
 								} else {
-									throw new Error('Cannot determine outcome at: ' + ['comparison', comparisonIndex, 'outcome', outcomeIndex].join('.'));
+									warnings.push('Outcome at "comparison[' + comparisonIndex + '].outcome[' + outcomeIndex + ']" contains no subgroups or studies');
 								}
 							});
 							return true;
 						}
 					});
+
+					// Remove empty otucomes if (settings.removeEmptyOutcomes) {{{
+					if (settings.removeEmptyOutcomes) {
+						comparison.outcome = comparison.outcome.filter(function(outcome) {
+							return (outcome.subgroup || outcome.study);
+						});
+					}
+					// }}}
 				});
 				next();
 			},
@@ -170,7 +181,7 @@ revman.parse = function parse(data, options, callback) {
 		])
 		// End {{{
 		.end(function(err) {
-			callback(err, this.json);
+			callback(err, this.json, warnings);
 		});
 		// }}}
 }
