@@ -66,6 +66,7 @@ Options can be any of the following:
 | `effectMeasureLookup` | Object         | *See code*     | Text value of shorthand effect measures (e.g. `effectMeasure=RR` sets `effectMeasureText=Rick Ratio`) |
 | `outcomeKeys`         | Array(Objects) | *See code*     | Keys to use when creating the `outcome` structure. Set this to falsy to disable                       |
 | `removeEmptyOutcomes` | Boolean        | `true`         | Remove any invalid looking outcomes with no studies or subgroup child nodes                           |
+| `debugOutcomes`       | Boolean        | `false`        | Be extra careful reading the comparison structure and warn on any unknown `*Outcome` keys             |
 
 
 parseFile(path, [options], callback)

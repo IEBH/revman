@@ -53,6 +53,7 @@ revman.parse = function parse(data, options, callback) {
 			{type: 'cont', outcome: 'contOutcome', study: 'contData', subgroup: 'contSubgroup'},
 		],
 		removeEmptyOutcomes: true,
+		debugOutcomes: false,
 	});
 	// }}}
 
@@ -120,6 +121,27 @@ revman.parse = function parse(data, options, callback) {
 							});
 						}
 					});
+
+					// Resort the comparison outcomes so they are in the right order {{{
+					comparison.outcome = _.sortBy(comparison.outcome, 'no');
+					// }}}
+
+					// Output warnings for any unknown `*Outcome` keys {{{
+					if (settings.debugOutcomes) {
+					_.keys(comparison)
+						.filter(function(key) {
+							// Ends with 'Outcome'...
+							return (/Outcome$/.test(key));
+						})
+						.filter(function(key) {
+							// AND is not already recognised
+							return !_.includes(_.map(settings.outcomeKeys, 'outcome'), key);
+						})
+						.forEach(function(key) {
+							warnings.push('Unrecognised Outcome key "' + key + '"');
+						});
+					}
+					// }}}
 
 					// Remove empty otucomes if (settings.removeEmptyOutcomes) {{{
 					if (settings.removeEmptyOutcomes) {
