@@ -230,7 +230,7 @@ revman.parse = function parse(data, options, callback) {
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
 					if (comparison.outcome && _.isArray(comparison.outcome))
 						comparison.outcome.forEach(function(outcome) {
-							if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure];
+							if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure] || outcome.effectMeasure;
 						});
 				});
 				next();
