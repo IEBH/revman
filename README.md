@@ -14,6 +14,8 @@ The following operations are applied to the raw source data:
 * The `effectMeasureText` value is set to the long-hand version of the shorter `effectMeasure` value (e.g. `effectMeasure=RR` sets `effectMeasureText=Rick Ratio`)
 * The `outcome` collection is calculated for each comparison providing easier access to the outcomes and studies without having to look at specific types of study key
 * The `outcomeType` key is set for each outcome to label what type of outcome it is
+* Summary of Findings tables are reparsed into processable data
+
 
 
 ```javascript
@@ -67,6 +69,7 @@ Options can be any of the following:
 | `outcomeKeys`         | Array(Objects) | *See code*     | Keys to use when creating the `outcome` structure. Set this to falsy to disable                       |
 | `removeEmptyOutcomes` | Boolean        | `true`         | Remove any invalid looking outcomes with no studies or subgroup child nodes                           |
 | `debugOutcomes`       | Boolean        | `false`        | Be extra careful reading the comparison structure and warn on any unknown `*Outcome` keys             |
+| `formatSofTables`     | Boolean        | `true`         | Process summary of findings tables into processable data                                              |
 
 
 parseFile(path, [options], callback)

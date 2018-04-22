@@ -62,6 +62,7 @@ revman.parse = function parse(data, options, callback) {
 		],
 		removeEmptyOutcomes: true,
 		debugOutcomes: false,
+		formatSofTables: true,
 	});
 	// }}}
 
@@ -233,6 +234,25 @@ revman.parse = function parse(data, options, callback) {
 							if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure] || outcome.effectMeasure;
 						});
 				});
+				next();
+			},
+			// }}}
+			// Calculate sofTables {{{
+			function(next) {
+				if (!settings.formatSofTables) return next();
+				if (!_.has(this.json, 'sofTables.sofTable.table')) return next();
+
+				this.json.summaryOfFindings = this.json.sofTables.sofTable.table.tr
+					.filter(tr => !_.has(tr, ['td', 0, 'colspan']) && _.has(tr, ['td', 0, 'p', 0])) // Filter all except individual cells
+					.map(tr => ({
+						outcome: _.get(tr, ['td', 0, 'p', 0]),
+						active: parseFloat(_.get(tr, ['td', 1, 'p', 0])),
+						placebo: parseFloat(_.get(tr, ['td', 2, 'p', 0])),
+						relativeEffect: _.get(tr, ['td', 3, 'p', 0]),
+						participants: _.get(tr, ['td', 4, 'p', 0]),
+						qualityOfEvidence: _.get(tr, ['td', 5, 'p', 0]),
+					}));
+
 				next();
 			},
 			// }}}
