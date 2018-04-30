@@ -236,6 +236,7 @@ revman.parse = function parse(data, options, callback) {
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
 					if (comparison.outcome && _.isArray(comparison.outcome))
 						['outcome', 'dichOutcome'].forEach(e => {
+							if (!_.has(comparison, e)) return;
 							comparison[e].forEach(function(outcome) {
 								if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure] || outcome.effectMeasure;
 							});
