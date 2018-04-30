@@ -40,6 +40,7 @@ revman.parse = function parse(data, options, callback) {
 			'p', 'a', 'i', 'b', 'link', 'ol', 'li', 'br', 'sup', 'tr', 'td', 'th',
 			'additionalTable', 'extension', 'flowchartbox',
 		],
+		ignoreFields: ['sup'],
 		effectMeasureLookup: {
 			'RR': 'Risk Ratio',
 			'ARR': 'Absolute Risk Reduction',
@@ -253,18 +254,13 @@ revman.parse = function parse(data, options, callback) {
 				this.json.summaryOfFindings = this.json.sofTables.sofTable.table.tr
 					.filter(tr => !_.has(tr, 'td.0.colspan') && _.has(tr, 'td.0.p.0')) // Filter all except individual cells
 					.map(tr => ({
-						outcome: revman.util.flatten(_.get(tr, 'td.0.p.0')),
-						active: parseFloat(revman.util.flatten(_.get(tr, 'td.1.p.0'))),
-						placebo: parseFloat(revman.util.flatten(_.get(tr, 'td.2.p.0'))),
-						relativeEffect: revman.util.flatten(_.get(tr, 'td.3.p.0')),
-						participants: revman.util.flatten(_.get(tr, 'td.4.p.0')),
-						qualityOfEvidence: revman.util.flatten(_.get(tr, 'td.5.p.0')),
-					}))
-					.map(i => {
-						// Flatten quality of evidence trees
-						if (_.has(i, 'qualityOfEvidence.b.0')) i.qualityOfEvidence = _.get(i, 'qualityOfEvidence.b.0');
-						return i;
-					});
+						outcome: revman.util.flatten(_.get(tr, 'td.0.p.0'), settings),
+						active: parseFloat(revman.util.flatten(_.get(tr, 'td.1.p.0'), settings)),
+						placebo: parseFloat(revman.util.flatten(_.get(tr, 'td.2.p.0'), settings)),
+						relativeEffect: revman.util.flatten(_.get(tr, 'td.3.p.0'), settings),
+						participants: revman.util.flatten(_.get(tr, 'td.4.p.0'), settings),
+						qualityOfEvidence: revman.util.flatten(_.get(tr, 'td.5.p.0'), settings),
+					}));
 
 				next();
 			},
@@ -309,23 +305,21 @@ revman.util = {};
 * Utility function to flatten an object down to its atomic value
 * This is used by the summaryOfFindings parcer to collapse structures such as tr.td.0.p.0 into a string value
 * @param {*} item Item to flatten
+* @param {Object} [options] Optional settings to include
+* @param {array} [options.ignoreFields=[]] Array of fields to ignore when flattening (usually HTML tags)
 * @returns {*} The nearest value to possible to an atomic scalar
 */
-revman.util.flatten = item => {
-	/*
-	return _.chain(item)
-		.cloneDeepWith(v => _.isObject(v) ? _.values(v) : undefined)
-		.flattenDeep()
-		.filter(v => !_.isEmpty(v))
-		.value()
-	*/
+revman.util.flatten = (item, options) => {
+	var settings = _.defaults(options, {
+		ignoreFields: [],
+	});
 
-
-	if (_.isObject(item) && _.keys(item).length == 1) {
-		return revman.util.flatten(_.values(item)[0]);
-	} else if (_.isArray(item) && item.length == 1) {
-		return revman.util.flatten(item[0]);
-	} else {
-		return item;
-	}
+	return (
+		traverse(item).reduce(function(acc, x) {
+			if (settings.ignoreFields.includes(this.key)) return this.remove(true);
+			if (this.isLeaf && x) acc.push(x);
+			return acc;
+		}, [])
+		|| []
+	).join(', ');
 };
