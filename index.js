@@ -2,7 +2,7 @@ var _ = require('lodash');
 var async = require('async-chainable');
 var fs = require('fs');
 var traverse = require('traverse');
-var xml2json = require('xml2json');
+var xml2js = require('xml2js');
 
 var revman = {};
 module.exports = revman;
@@ -69,29 +69,34 @@ revman.parse = function parse(data, options, callback) {
 	async()
 		// Read in file contents {{{
 		.then('json', function(next) {
-			try {
-				var rmXML = xml2json.toJson(data, {
-					object: true,
-				});
-				next(null, rmXML);
-			} catch (e) {
-				next(e);
-			}
+			xml2js.parseString(data, {
+				explicitArray: false,
+				trim: true,
+				normalize: true,
+				mergeAttrs: true,
+				tagNameProcessors: [ tag => _.camelCase(tag) ],
+				attrNameProcessors: [ tag => _.camelCase(tag) ],
+			}, next);
+		})
+		// }}}
+		// Unwrap the first object found {{{
+		.then('json', function(next) {
+			if (!_.has(this.json, 'cochraneReview')) return next('This does not look like a valid RevMan file');
+			// Object.assign(this.json.coc
+			next(null, Object.assign({}, this.json.cochraneReview, this.json.$));
 		})
 		// }}}
 		// Parse raw input into JS standard JSON {{{
 		.then('json', function(next) {
 			next(null, traverse(this.json).map(function(v) {
-				if (_.includes(settings.arrayFields, this.key)) { // Translatevalue into array
+				if (_.includes(settings.arrayFields, this.key)) { // Translate value into array
 					if (_.isObject(v) && _.has(v, '0')) { // Multiple items in array
 						this.update(_.values(v));
 					} else { // Single item array
 						this.update([v]);
 					}
 				} else if (_.isObject(v)) { // Normalize keys
-					this.update(_.mapKeys(v, function(c, k) {
-						return _.camelCase(k.toLowerCase());
-					}));
+					// Pass
 				} else if (_.includes(settings.dateFields, this.key)) { // Translate value into Date
 					this.update(new Date(v));
 				} else if (_.includes(settings.numberFields, this.key)) { // Translate into numbers
@@ -101,7 +106,7 @@ revman.parse = function parse(data, options, callback) {
 				} else if (_.includes(settings.booleanFields, this.key)) { // Translate into floats
 					this.update(v == 'YES');
 				}
-			}).cochraneReview);
+			}));
 		})
 		// }}}
 		// Calculate comparison.outcome {{{
@@ -230,8 +235,10 @@ revman.parse = function parse(data, options, callback) {
 				if (!_.isArray(this.json.analysesAndData.comparison)) return next();
 				this.json.analysesAndData.comparison.forEach(function(comparison) {
 					if (comparison.outcome && _.isArray(comparison.outcome))
-						comparison.outcome.forEach(function(outcome) {
-							if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure] || outcome.effectMeasure;
+						['outcome', 'dichOutcome'].forEach(e => {
+							comparison[e].forEach(function(outcome) {
+								if (_.has(outcome, 'effectMeasure')) outcome.effectMeasureText = settings.effectMeasureLookup[outcome.effectMeasure] || outcome.effectMeasure;
+							});
 						});
 				});
 				next();
@@ -243,15 +250,20 @@ revman.parse = function parse(data, options, callback) {
 				if (!_.has(this.json, 'sofTables.sofTable.table')) return next();
 
 				this.json.summaryOfFindings = this.json.sofTables.sofTable.table.tr
-					.filter(tr => !_.has(tr, ['td', 0, 'colspan']) && _.has(tr, ['td', 0, 'p', 0])) // Filter all except individual cells
+					.filter(tr => !_.has(tr, 'td.0.colspan') && _.has(tr, 'td.0.p.0')) // Filter all except individual cells
 					.map(tr => ({
-						outcome: _.get(tr, ['td', 0, 'p', 0]),
-						active: parseFloat(_.get(tr, ['td', 1, 'p', 0])),
-						placebo: parseFloat(_.get(tr, ['td', 2, 'p', 0])),
-						relativeEffect: _.get(tr, ['td', 3, 'p', 0]),
-						participants: _.get(tr, ['td', 4, 'p', 0]),
-						qualityOfEvidence: _.get(tr, ['td', 5, 'p', 0]),
-					}));
+						outcome: revman.util.flatten(_.get(tr, 'td.0.p.0')),
+						active: parseFloat(revman.util.flatten(_.get(tr, 'td.1.p.0'))),
+						placebo: parseFloat(revman.util.flatten(_.get(tr, 'td.2.p.0'))),
+						relativeEffect: revman.util.flatten(_.get(tr, 'td.3.p.0')),
+						participants: revman.util.flatten(_.get(tr, 'td.4.p.0')),
+						qualityOfEvidence: revman.util.flatten(_.get(tr, 'td.5.p.0')),
+					}))
+					.map(i => {
+						// Flatten quality of evidence trees
+						if (_.has(i, 'qualityOfEvidence.b.0')) i.qualityOfEvidence = _.get(i, 'qualityOfEvidence.b.0');
+						return i;
+					});
 
 				next();
 			},
@@ -283,3 +295,36 @@ revman.parseFile = function parseFile(path, options, callback) {
 			revman.parse(this.contents, options, callback);
 		});
 }
+
+
+/**
+* General storage for Utilify functions
+* @var {Object}
+*/
+revman.util = {};
+
+
+/**
+* Utility function to flatten an object down to its atomic value
+* This is used by the summaryOfFindings parcer to collapse structures such as tr.td.0.p.0 into a string value
+* @param {*} item Item to flatten
+* @returns {*} The nearest value to possible to an atomic scalar
+*/
+revman.util.flatten = item => {
+	/*
+	return _.chain(item)
+		.cloneDeepWith(v => _.isObject(v) ? _.values(v) : undefined)
+		.flattenDeep()
+		.filter(v => !_.isEmpty(v))
+		.value()
+	*/
+
+
+	if (_.isObject(item) && _.keys(item).length == 1) {
+		return revman.util.flatten(_.values(item)[0]);
+	} else if (_.isArray(item) && item.length == 1) {
+		return revman.util.flatten(item[0]);
+	} else {
+		return item;
+	}
+};
