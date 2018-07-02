@@ -169,16 +169,22 @@ describe('Revman - parse file: antibiotics-for-sore-throat.rm5', function() {
 			expect(outcome).to.have.property('placebo');
 			expect(outcome.placebo).to.be.a('number');
 
-			expect(outcome).to.have.property('relativeEffect');
-			expect(outcome.relativeEffect).to.be.a('string');
+			expect(outcome).to.have.property('effect');
+			expect(outcome.effect).to.be.a('string');
 
 			expect(outcome).to.have.property('participants');
 			expect(outcome.participants).to.be.a('string');
 
-			expect(outcome).to.have.property('qualityOfEvidence');
-			expect(outcome.qualityOfEvidence).to.be.a('string');
+			expect(outcome).to.have.property('quality');
+			expect(outcome.quality).to.be.a('string');
 		});
 
-		// console.log(require('util').inspect(sof, {depth: null, colors: true}))
+		// Random data samples
+		expect(sof).to.have.nested.property('0.active', 0.66);
+		expect(sof).to.have.nested.property('1.quality', 'High');
+		expect(sof).to.have.nested.property('2.comments', 'Based largely on risk in pre-1960 trials');
+		expect(sof).to.have.nested.property('3.effect', '0.07 to 1.32');
+		expect(sof).to.have.nested.property('4.placebo', 0.14);
+		expect(sof).to.have.nested.property('5.participants', '3760 (11)');
 	});
 });

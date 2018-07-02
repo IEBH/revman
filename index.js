@@ -252,14 +252,20 @@ revman.parse = function parse(data, options, callback) {
 				if (!_.has(this.json, 'sofTables.sofTable.table')) return next();
 
 				this.json.summaryOfFindings = this.json.sofTables.sofTable.table.tr
-					.filter(tr => !_.has(tr, 'td.0.colspan') && _.has(tr, 'td.0.p.0')) // Filter all except individual cells
+					.filter(tr =>  // Filter all except individual cells
+						( // No colspan specified or has a value of 1 (the default)
+							!_.has(tr, 'td.0.colspan')
+							|| _.get(tr, 'td.0.colspan') == 1
+						)
+						&& _.has(tr, 'td.0.p.0'))
 					.map(tr => ({
 						outcome: revman.util.flatten(_.get(tr, 'td.0.p.0'), settings),
 						active: parseFloat(revman.util.flatten(_.get(tr, 'td.1.p.0'), settings)),
 						placebo: parseFloat(revman.util.flatten(_.get(tr, 'td.2.p.0'), settings)),
-						relativeEffect: revman.util.flatten(_.get(tr, 'td.3.p.0'), settings),
+						effect: revman.util.flatten(_.get(tr, 'td.3.p.0'), settings),
 						participants: revman.util.flatten(_.get(tr, 'td.4.p.0'), settings),
-						qualityOfEvidence: revman.util.flatten(_.get(tr, 'td.5.p.0'), settings),
+						quality: revman.util.flatten(_.get(tr, 'td.5.p.0'), settings),
+						comments: revman.util.flatten(_.get(tr, 'td.6.p.0'), settings),
 					}));
 
 				next();
