@@ -46,6 +46,120 @@ analysesAndData.comparison[0].outcome[0].study[0]
 ```
 
 
+Compatibility Notes
+===================
+This NPM library should translate all the default RevMan data, transforming and fixing most data types (see top of document).
+
+Specific exceptions to data input are listed below.
+
+
+Summary of Findings
+-------------------
+The Summary of Findings tables (SoF) is not stored within the RevMan file in a federated way. Unlike most data types the SoF tables are simply a implementation of a (slightly mutated) HTML `<table/>` tag.
+
+For example this is the layout for the header rows of a SoF table from [a test RevMan XML file](test/data/antibiotics-for-sore-throat.rm5):
+
+```html
+<SOF_TABLES MODIFIED="2013-10-25 10:47:45 +1000" MODIFIED_BY="[Empty name]">
+	<SOF_TABLE ID="SOF-01" MODIFIED="2013-10-25 10:47:45 +1000" MODIFIED_BY="[Empty name]" NO="1">
+		<TITLE MODIFIED="2011-05-18 09:42:04 +1000" MODIFIED_BY="Liz Dooley">Summary of findings</TITLE>
+		<TABLE COLS="7" ROWS="13">
+			<TR>
+				<TD COLSPAN="7">
+					<P>
+						<B>Antibiotics compared with placebo for sore throat</B>
+					</P>
+				</TD>
+			</TR>
+			<TR>
+				<TD COLSPAN="7">
+					<P>
+						<B>Patient or population: </B>
+						patients presenting with sore throat
+					</P>
+					<P>
+						<B>Settings:</B>
+						community
+					</P>
+					<P>
+						<B>Intervention:</B>
+						antibiotics
+					</P>
+					<P>
+						<B>Comparison:</B>
+						placebo
+					</P>
+				</TD>
+			</TR>
+			<TR>
+				<TH ROWSPAN="3" VALIGN="BOTTOM">
+					<P>Outcomes</P>
+				</TH>
+				<TH COLSPAN="2" VALIGN="BOTTOM">
+					<P>Illustrative comparative risks* (95% CI)</P>
+				</TH>
+				<TH ROWSPAN="3" VALIGN="BOTTOM">
+					<P>Relative effect<BR/>(95% CI)</P>
+				</TH>
+				<TH ROWSPAN="3" VALIGN="BOTTOM">
+					<P>No of participants<BR/>(studies)</P>
+				</TH>
+				<TH ROWSPAN="3" VALIGN="BOTTOM">
+					<P>Quality of the evidence<BR/>(GRADE)</P>
+				</TH>
+				<TH ROWSPAN="3" VALIGN="BOTTOM">
+					<P>Comments</P>
+				</TH>
+			</TR>
+			<TR>
+				<TH VALIGN="BOTTOM">
+					<P>Assumed risk</P>
+				</TH>
+				<TH VALIGN="BOTTOM">
+					<P>Corresponding risk</P>
+				</TH>
+			</TR>
+			<TR>
+				<TH VALIGN="BOTTOM">
+					<P>Antibiotics</P>
+				</TH>
+				<TH VALIGN="BOTTOM">
+					<P>Placebo</P>
+				</TH>
+			</TR>
+			<!-- Table truncated for brevity -->
+		</TABLE>
+	</SOF_TABLE>
+</SOF_TABLES>
+```
+
+... clearly this data needs to be parsed form HTML data into a data format that is usable.
+
+To manage this, the RevMan NPM file attempts to apply commonly used rules to interpret the data back into a suitable data tree.
+
+The first row of the above data would be parsed as:
+
+```json
+{
+	summaryOfFindings: [
+		{
+			outcome: 'Sorer throat: day 3',
+			active: 0.66,
+			placebo: 0.72,
+			effect: '0.68 to 0.76',
+			participants: '3621 (15)',
+			quality: 'High',
+			comments: ''
+		}
+	]
+}
+```
+
+See the [antibiotics testkit](test/parse-antibiotics.js) for further examples.
+
+
+
+
 API
 ===
 
@@ -53,7 +167,7 @@ parse(data, [options], callback)
 ------------------------------
 Parse raw data (data is assumed to be valid XML as a string, stream or buffer) and return the formatted output.
 
-The callback will be called with the pattern `(err, parsedResult, warnings)`. Warnings will be an array of any non-fatal errors encounted when parsing the files (empty subGroups, missing studies etc.)
+The callback will be called with the pattern `(err, parsedResult, warnings)`. Warnings will be an array of any non-fatal errors encountered when parsing the files (empty subGroups, missing studies etc.)
 
 Options can be any of the following:
 
